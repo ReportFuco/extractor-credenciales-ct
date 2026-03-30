@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ct_extractor.auth import AuthClient, TokenStore
+from ct_extractor.auth import AuthClient, AuthSession, TokenStore
 from ct_extractor.config import Settings
 from ct_extractor.credentials import CredentialsClient
+from ct_extractor.exporters import IncrementalTableWriter
 
 
 def load_dotenv(dotenv_path: str = ".env") -> None:
@@ -58,9 +60,14 @@ def parse_args() -> argparse.Namespace:
         help="Fuerza autenticacion antes de consultar credenciales.",
     )
     cred_parser.add_argument(
+        "--async-fetch",
+        action="store_true",
+        help="Obtiene paginas usando cliente async.",
+    )
+    cred_parser.add_argument(
         "--output",
         default="",
-        help="Ruta de salida (.xlsx recomendado, .json opcional).",
+        help="Ruta de salida (.xlsx o .csv recomendado, .json opcional).",
     )
 
     return parser.parse_args()
@@ -79,6 +86,13 @@ def get_or_create_session(settings: Settings, force_new: bool = False):
     return session
 
 
+def resolve_output_path(output: str) -> Path:
+    if output:
+        return Path(output)
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return Path("output") / f"credentials_{stamp}.xlsx"
+
+
 def save_json(payload: dict[str, Any], output_path: Path) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
@@ -88,40 +102,205 @@ def save_json(payload: dict[str, Any], output_path: Path) -> Path:
     return output_path.resolve()
 
 
-def save_results_excel(results: list[dict[str, Any]], output_path: Path) -> Path:
-    try:
-        import pandas as pd
-    except ImportError as exc:
-        raise RuntimeError(
-            "Falta dependencia para Excel. Ejecuta: pip install -r requirements.txt"
-        ) from exc
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    df = pd.json_normalize(results, sep=".")
-    for column in df.columns:
-        df[column] = df[column].apply(
-            lambda value: ", ".join(str(item) for item in value)
-            if isinstance(value, list)
-            else value
+def stream_pages_sync(
+    client: CredentialsClient,
+    session: AuthSession,
+    writer: IncrementalTableWriter,
+    per_page: int,
+    sort_by: str,
+    order: str,
+    all_pages: bool,
+    page: int,
+) -> int:
+    total = 0
+    if all_pages:
+        page_iter = client.iter_pages(
+            token=session.auth_token,
+            email=session.email,
+            per_page=per_page,
+            sort_by=sort_by,
+            order=order,
         )
-    df.to_excel(output_path, index=False)
-    return output_path.resolve()
-
-
-def save_output(payload: dict[str, Any], output: str) -> Path:
-    if output:
-        output_path = Path(output)
+        for payload in page_iter:
+            rows = payload.get("results", [])
+            if isinstance(rows, list):
+                writer.write_records(rows)
+                total += len(rows)
     else:
-        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = Path("output") / f"credentials_{stamp}.xlsx"
+        payload = client.get_page(
+            token=session.auth_token,
+            email=session.email,
+            page=page,
+            per_page=per_page,
+            sort_by=sort_by,
+            order=order,
+        )
+        rows = payload.get("results", [])
+        if isinstance(rows, list):
+            writer.write_records(rows)
+            total += len(rows)
+    return total
 
-    if output_path.suffix.lower() == ".json":
-        return save_json(payload, output_path)
 
-    results = payload.get("results", [])
-    if not isinstance(results, list):
-        raise RuntimeError("La respuesta no contiene un arreglo valido en 'results'.")
-    return save_results_excel(results, output_path)
+async def stream_pages_async(
+    client: CredentialsClient,
+    session: AuthSession,
+    writer: IncrementalTableWriter,
+    per_page: int,
+    sort_by: str,
+    order: str,
+    all_pages: bool,
+    page: int,
+) -> int:
+    total = 0
+    if all_pages:
+        async for payload in client.iter_pages_async(
+            token=session.auth_token,
+            email=session.email,
+            per_page=per_page,
+            sort_by=sort_by,
+            order=order,
+        ):
+            rows = payload.get("results", [])
+            if isinstance(rows, list):
+                writer.write_records(rows)
+                total += len(rows)
+    else:
+        payload = await client.get_page_async(
+            token=session.auth_token,
+            email=session.email,
+            page=page,
+            per_page=per_page,
+            sort_by=sort_by,
+            order=order,
+        )
+        rows = payload.get("results", [])
+        if isinstance(rows, list):
+            writer.write_records(rows)
+            total += len(rows)
+    return total
+
+
+def export_tabular_incremental(
+    client: CredentialsClient,
+    session: AuthSession,
+    output_path: Path,
+    per_page: int,
+    sort_by: str,
+    order: str,
+    all_pages: bool,
+    page: int,
+    async_fetch: bool,
+) -> tuple[Path, int]:
+    writer = IncrementalTableWriter(output_path)
+    try:
+        if async_fetch:
+            total = asyncio.run(
+                stream_pages_async(
+                    client=client,
+                    session=session,
+                    writer=writer,
+                    per_page=per_page,
+                    sort_by=sort_by,
+                    order=order,
+                    all_pages=all_pages,
+                    page=page,
+                )
+            )
+        else:
+            total = stream_pages_sync(
+                client=client,
+                session=session,
+                writer=writer,
+                per_page=per_page,
+                sort_by=sort_by,
+                order=order,
+                all_pages=all_pages,
+                page=page,
+            )
+    finally:
+        writer.close()
+    return output_path.resolve(), total
+
+
+def export_json(
+    client: CredentialsClient,
+    session: AuthSession,
+    output_path: Path,
+    per_page: int,
+    sort_by: str,
+    order: str,
+    all_pages: bool,
+    page: int,
+    async_fetch: bool,
+) -> tuple[Path, int]:
+    if all_pages:
+        if async_fetch:
+            payload = asyncio.run(
+                _get_all_async(
+                    client=client,
+                    session=session,
+                    per_page=per_page,
+                    sort_by=sort_by,
+                    order=order,
+                )
+            )
+        else:
+            payload = client.get_all(
+                token=session.auth_token,
+                email=session.email,
+                per_page=per_page,
+                sort_by=sort_by,
+                order=order,
+            )
+    else:
+        if async_fetch:
+            payload = asyncio.run(
+                client.get_page_async(
+                    token=session.auth_token,
+                    email=session.email,
+                    page=page,
+                    per_page=per_page,
+                    sort_by=sort_by,
+                    order=order,
+                )
+            )
+        else:
+            payload = client.get_page(
+                token=session.auth_token,
+                email=session.email,
+                page=page,
+                per_page=per_page,
+                sort_by=sort_by,
+                order=order,
+            )
+
+    out_path = save_json(payload, output_path)
+    total = len(payload.get("results", []))
+    return out_path, total
+
+
+async def _get_all_async(
+    client: CredentialsClient,
+    session: AuthSession,
+    per_page: int,
+    sort_by: str,
+    order: str,
+) -> dict[str, Any]:
+    results: list[dict[str, Any]] = []
+    pagination: dict[str, Any] = {}
+    async for payload in client.iter_pages_async(
+        token=session.auth_token,
+        email=session.email,
+        per_page=per_page,
+        sort_by=sort_by,
+        order=order,
+    ):
+        rows = payload.get("results", [])
+        if isinstance(rows, list):
+            results.extend(rows)
+        pagination = payload.get("pagination", pagination)
+    return {"results": results, "pagination": pagination}
 
 
 def handle_token(settings: Settings, force: bool) -> int:
@@ -148,53 +327,46 @@ def handle_credentials(
     order: str,
     force_new_token: bool,
     output: str,
+    async_fetch: bool,
 ) -> int:
+    output_path = resolve_output_path(output)
     session = get_or_create_session(settings, force_new=force_new_token)
     client = CredentialsClient(settings)
 
-    try:
-        if all_pages:
-            payload = client.get_all(
-                token=session.auth_token,
-                email=session.email,
+    def run_export(current_session: AuthSession) -> tuple[Path, int]:
+        if output_path.suffix.lower() == ".json":
+            return export_json(
+                client=client,
+                session=current_session,
+                output_path=output_path,
                 per_page=per_page,
                 sort_by=sort_by,
                 order=order,
-            )
-        else:
-            payload = client.get_page(
-                token=session.auth_token,
-                email=session.email,
+                all_pages=all_pages,
                 page=page,
-                per_page=per_page,
-                sort_by=sort_by,
-                order=order,
+                async_fetch=async_fetch,
             )
+        return export_tabular_incremental(
+            client=client,
+            session=current_session,
+            output_path=output_path,
+            per_page=per_page,
+            sort_by=sort_by,
+            order=order,
+            all_pages=all_pages,
+            page=page,
+            async_fetch=async_fetch,
+        )
+
+    try:
+        out_path, total = run_export(session)
     except RuntimeError as err:
         if force_new_token:
             raise
         session = get_or_create_session(settings, force_new=True)
-        if all_pages:
-            payload = client.get_all(
-                token=session.auth_token,
-                email=session.email,
-                per_page=per_page,
-                sort_by=sort_by,
-                order=order,
-            )
-        else:
-            payload = client.get_page(
-                token=session.auth_token,
-                email=session.email,
-                page=page,
-                per_page=per_page,
-                sort_by=sort_by,
-                order=order,
-            )
+        out_path, total = run_export(session)
         print(f"Token expirado/invalido, se regenero automaticamente ({err}).")
 
-    out_path = save_output(payload, output=output)
-    total = len(payload.get("results", []))
     print(f"Credenciales extraidas: {total}")
     print(f"Archivo generado: {out_path}")
     return 0
@@ -225,6 +397,7 @@ def main() -> int:
             order=args.order,
             force_new_token=args.force_new_token,
             output=args.output,
+            async_fetch=args.async_fetch,
         )
 
     raise ValueError(f"Comando no soportado: {args.command}")
