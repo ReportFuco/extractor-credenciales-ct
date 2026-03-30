@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from ct_extractor.auth import AuthClient, AuthSession, TokenStore
+from ct_extractor.cases import UntitledCasesClient
 from ct_extractor.config import Settings
 from ct_extractor.credentials import CredentialsClient
 from ct_extractor.exporters import IncrementalTableWriter
@@ -70,6 +71,28 @@ def parse_args() -> argparse.Namespace:
         help="Ruta de salida (.xlsx o .csv recomendado, .json opcional).",
     )
 
+    cases_parser = subparsers.add_parser(
+        "untitled-cases", help="Reporte de causas sin titulo."
+    )
+    cases_parser.add_argument(
+        "--per-page", type=int, default=100, help="Registros por pagina."
+    )
+    cases_parser.add_argument(
+        "--force-new-token",
+        action="store_true",
+        help="Fuerza autenticacion antes de consultar.",
+    )
+    cases_parser.add_argument(
+        "--async-fetch",
+        action="store_true",
+        help="Obtiene paginas usando cliente async.",
+    )
+    cases_parser.add_argument(
+        "--output",
+        default="",
+        help="Ruta de salida (.xlsx o .csv recomendado, .json opcional).",
+    )
+
     return parser.parse_args()
 
 
@@ -86,11 +109,11 @@ def get_or_create_session(settings: Settings, force_new: bool = False):
     return session
 
 
-def resolve_output_path(output: str) -> Path:
+def resolve_output_path(output: str, prefix: str) -> Path:
     if output:
         return Path(output)
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return Path("output") / f"credentials_{stamp}.xlsx"
+    return Path("output") / f"{prefix}_{stamp}.xlsx"
 
 
 def save_json(payload: dict[str, Any], output_path: Path) -> Path:
@@ -191,8 +214,9 @@ def export_tabular_incremental(
     all_pages: bool,
     page: int,
     async_fetch: bool,
+    sheet_name: str = "data",
 ) -> tuple[Path, int]:
-    writer = IncrementalTableWriter(output_path)
+    writer = IncrementalTableWriter(output_path, sheet_name=sheet_name)
     try:
         if async_fetch:
             total = asyncio.run(
@@ -329,7 +353,7 @@ def handle_credentials(
     output: str,
     async_fetch: bool,
 ) -> int:
-    output_path = resolve_output_path(output)
+    output_path = resolve_output_path(output, prefix="credentials")
     session = get_or_create_session(settings, force_new=force_new_token)
     client = CredentialsClient(settings)
 
@@ -356,6 +380,7 @@ def handle_credentials(
             all_pages=all_pages,
             page=page,
             async_fetch=async_fetch,
+            sheet_name="credentials",
         )
 
     try:
@@ -368,6 +393,116 @@ def handle_credentials(
         print(f"Token expirado/invalido, se regenero automaticamente ({err}).")
 
     print(f"Credenciales extraidas: {total}")
+    print(f"Archivo generado: {out_path}")
+    return 0
+
+
+def _extract_case_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    for key in ("results", "cases", "data"):
+        value = payload.get(key)
+        if isinstance(value, list):
+            return [row for row in value if isinstance(row, dict)]
+    return []
+
+
+def _export_untitled_cases_sync(
+    client: UntitledCasesClient,
+    session: AuthSession,
+    per_page: int,
+    output_path: Path,
+) -> tuple[Path, int]:
+    if output_path.suffix.lower() == ".json":
+        all_rows: list[dict[str, Any]] = []
+        pages: list[dict[str, Any]] = []
+        for payload in client.iter_pages(
+            token=session.auth_token, email=session.email, per_page=per_page
+        ):
+            pages.append(payload)
+            all_rows.extend(_extract_case_rows(payload))
+        return save_json({"results": all_rows, "pages": pages}, output_path), len(all_rows)
+
+    writer = IncrementalTableWriter(output_path, sheet_name="causas_sin_titulo")
+    total = 0
+    try:
+        for payload in client.iter_pages(
+            token=session.auth_token, email=session.email, per_page=per_page
+        ):
+            rows = _extract_case_rows(payload)
+            writer.write_records(rows)
+            total += len(rows)
+    finally:
+        writer.close()
+    return output_path.resolve(), total
+
+
+async def _export_untitled_cases_async(
+    client: UntitledCasesClient,
+    session: AuthSession,
+    per_page: int,
+    output_path: Path,
+) -> tuple[Path, int]:
+    if output_path.suffix.lower() == ".json":
+        all_rows: list[dict[str, Any]] = []
+        pages: list[dict[str, Any]] = []
+        async for payload in client.iter_pages_async(
+            token=session.auth_token, email=session.email, per_page=per_page
+        ):
+            pages.append(payload)
+            all_rows.extend(_extract_case_rows(payload))
+        return save_json({"results": all_rows, "pages": pages}, output_path), len(all_rows)
+
+    writer = IncrementalTableWriter(output_path, sheet_name="causas_sin_titulo")
+    total = 0
+    try:
+        async for payload in client.iter_pages_async(
+            token=session.auth_token, email=session.email, per_page=per_page
+        ):
+            rows = _extract_case_rows(payload)
+            writer.write_records(rows)
+            total += len(rows)
+    finally:
+        writer.close()
+    return output_path.resolve(), total
+
+
+def handle_untitled_cases(
+    settings: Settings,
+    per_page: int,
+    force_new_token: bool,
+    output: str,
+    async_fetch: bool,
+) -> int:
+    output_path = resolve_output_path(output, prefix="causas_sin_titulo")
+    session = get_or_create_session(settings, force_new=force_new_token)
+    client = UntitledCasesClient(settings)
+
+    def run_export(current_session: AuthSession) -> tuple[Path, int]:
+        if async_fetch:
+            return asyncio.run(
+                _export_untitled_cases_async(
+                    client=client,
+                    session=current_session,
+                    per_page=per_page,
+                    output_path=output_path,
+                )
+            )
+        return _export_untitled_cases_sync(
+            client=client,
+            session=current_session,
+            per_page=per_page,
+            output_path=output_path,
+        )
+
+    try:
+        out_path, total = run_export(session)
+    except RuntimeError as err:
+        if force_new_token:
+            raise
+        session = get_or_create_session(settings, force_new=True)
+        out_path, total = run_export(session)
+        print(f"Token expirado/invalido, se regenero automaticamente ({err}).")
+
+    print(f"Causas sin titulo extraidas: {total}")
     print(f"Archivo generado: {out_path}")
     return 0
 
@@ -400,9 +535,20 @@ def main() -> int:
             async_fetch=args.async_fetch,
         )
 
+    if args.command == "untitled-cases":
+        if args.per_page <= 0:
+            print("Error: --per-page debe ser mayor a 0.")
+            return 1
+        return handle_untitled_cases(
+            settings=settings,
+            per_page=args.per_page,
+            force_new_token=args.force_new_token,
+            output=args.output,
+            async_fetch=args.async_fetch,
+        )
+
     raise ValueError(f"Comando no soportado: {args.command}")
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

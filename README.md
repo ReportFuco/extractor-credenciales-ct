@@ -6,6 +6,7 @@ Script modular en Python para:
 2. Persistir `auth_token`.
 3. Consultar credenciales.
 4. Exportar `results` en modo incremental por bloques (`.xlsx` o `.csv`) sin cargar todo en RAM.
+5. Generar reporte de `causas sin titulo` desde `ct/cases`.
 
 ## Preparacion
 
@@ -50,6 +51,12 @@ Opcional: guardar JSON completo (incluye `pagination`):
 python main.py credentials --all --output output/credenciales_full.json
 ```
 
+Reporte de causas sin titulo:
+
+```bash
+python main.py untitled-cases --per-page 100 --async-fetch --output output/causas_sin_titulo.xlsx
+```
+
 ## CLI disponible
 
 | Comando | Descripcion | Ejemplo |
@@ -62,6 +69,8 @@ python main.py credentials --all --output output/credenciales_full.json
 | `python main.py credentials --output archivo.xlsx` | Exporta incremental a Excel (`results`). | `python main.py credentials --all --output output/credenciales.xlsx` |
 | `python main.py credentials --output archivo.csv` | Exporta incremental a CSV (`results`). | `python main.py credentials --all --output output/credenciales.csv` |
 | `python main.py credentials --output archivo.json` | Exporta JSON completo (`results` + `pagination`). | `python main.py credentials --all --output output/credenciales.json` |
+| `python main.py untitled-cases --per-page M` | Exporta causas sin titulo (todas las paginas). | `python main.py untitled-cases --per-page 100` |
+| `python main.py untitled-cases --async-fetch` | Exporta causas sin titulo con cliente async. | `python main.py untitled-cases --per-page 100 --async-fetch --output output/causas_sin_titulo.csv` |
 
 Parametros utiles de `credentials`:
 

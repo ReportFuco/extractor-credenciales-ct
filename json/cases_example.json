@@ -1,0 +1,293 @@
+{
+    "results": [
+        {
+            "id": 2608510,
+            "code": "C-4450-2026",
+            "code_name": null,
+            "title": "Sin título",
+            "parent_id": null,
+            "active": true,
+            "case_state_summary": null,
+            "url": "/ct/cases/proxy/Suscriptores?case_code=C-4450-2026&court=7juzgadocivilsantiago&second=1&type=Civil",
+            "creator_id": 1,
+            "created_at": "2026-03-27T20:54:48.000Z",
+            "updated_at": "2026-03-30T12:32:03.000Z",
+            "last_movement_official_date": null,
+            "confidential": false,
+            "court": {
+                "id": 166,
+                "name": "7° Juzgado Civil de Santiago",
+                "url": "http://www.pjud.cl/trib-primera-instancia",
+                "last_daily_scrap": "2026-03-30T16:14:58.000Z"
+            },
+            "client": {
+                "id": 657122,
+                "name": "CARDENAS DONOSO LUIS EUGENIO",
+                "integration_code": null,
+                "integration_id": null
+            },
+            "full_url": "/ct/cases/proxy/Suscriptores?case_code=C-4450-2026&court=7juzgadocivilsantiago&pass=Lu4hhZW3cutmasV70JIEig%3D%3D&second=1&type=Civil&user=14357873-9",
+            "new_child_cases": 0
+        },
+        {
+            "id": 2608412,
+            "code": "C-4451-2026",
+            "code_name": null,
+            "title": "Sin título",
+            "parent_id": null,
+            "active": true,
+            "case_state_summary": null,
+            "url": "/ct/cases/proxy/Suscriptores?case_code=C-4451-2026&court=17juzgadocivilsantiago&second=1&type=Civil",
+            "creator_id": 1,
+            "created_at": "2026-03-27T20:23:32.000Z",
+            "updated_at": "2026-03-30T12:32:18.000Z",
+            "last_movement_official_date": null,
+            "confidential": false,
+            "court": {
+                "id": 176,
+                "name": "17° Juzgado Civil de Santiago",
+                "url": "http://www.pjud.cl/trib-primera-instancia",
+                "last_daily_scrap": "2026-03-30T16:15:03.000Z"
+            },
+            "client": {
+                "id": 657040,
+                "name": "ROSALES CADIZ NICOL ALEJANDRA",
+                "integration_code": null,
+                "integration_id": null
+            },
+            "full_url": "/ct/cases/proxy/Suscriptores?case_code=C-4451-2026&court=17juzgadocivilsantiago&pass=Lu4hhZW3cutmasV70JIEig%3D%3D&second=1&type=Civil&user=14357873-9",
+            "new_child_cases": 0
+        },
+        {
+            "id": 2608227,
+            "code": "C-4419-2026",
+            "code_name": null,
+            "title": "Sin título",
+            "parent_id": null,
+            "active": true,
+            "case_state_summary": null,
+            "url": "/ct/cases/proxy/Suscriptores?case_code=C-4419-2026&court=25juzgadocivilsantiago&second=1&type=Civil",
+            "creator_id": 1,
+            "created_at": "2026-03-27T19:28:50.000Z",
+            "updated_at": "2026-03-30T12:32:03.000Z",
+            "last_movement_official_date": null,
+            "confidential": false,
+            "court": {
+                "id": 184,
+                "name": "25° Juzgado Civil de Santiago",
+                "url": "http://www.pjud.cl/trib-primera-instancia",
+                "last_daily_scrap": "2026-03-30T16:16:22.000Z"
+            },
+            "client": {
+                "id": 656876,
+                "name": "URBINA CONTRERAS DAVID ESEQUIEL",
+                "integration_code": null,
+                "integration_id": null
+            },
+            "full_url": "/ct/cases/proxy/Suscriptores?case_code=C-4419-2026&court=25juzgadocivilsantiago&pass=Lu4hhZW3cutmasV70JIEig%3D%3D&second=1&type=Civil&user=14357873-9",
+            "new_child_cases": 0
+        },
+        {
+            "id": 2608121,
+            "code": "C-1481-2026",
+            "code_name": "ROL",
+            "title": "Sin título",
+            "parent_id": null,
+            "active": true,
+            "case_state_summary": null,
+            "url": "/ct/cases/proxy/Suscriptores?case_code=C-1481-2026&court=2juzgadocivilrancagua&second=1&type=Civil",
+            "creator_id": 398,
+            "created_at": "2026-03-27T18:34:16.000Z",
+            "updated_at": "2026-03-30T08:31:29.000Z",
+            "last_movement_official_date": null,
+            "confidential": false,
+            "court": {
+                "id": 255,
+                "name": "2° Juzgado Civil de Rancagua",
+                "url": "http://www.pjud.cl/trib-primera-instancia",
+                "last_daily_scrap": "2026-03-30T16:15:47.000Z"
+            },
+            "client": {
+                "id": 656644,
+                "name": "TRIGO MILLAR FELICIANO EDUARDO",
+                "integration_code": null,
+                "integration_id": null
+            },
+            "full_url": "/ct/cases/proxy/Suscriptores?case_code=C-1481-2026&court=2juzgadocivilrancagua&pass=YZfAvhateV8BAIQ3ugBZFg%3D%3D&second=1&type=Civil&user=7184105-7",
+            "new_child_cases": 0
+        },
+        {
+            "id": 2577928,
+            "code": "C-372-2026",
+            "code_name": "ROL",
+            "title": "Sin título",
+            "parent_id": null,
+            "active": true,
+            "case_state_summary": null,
+            "url": "/ct/cases/proxy/Suscriptores?case_code=C-372-2026&court=4juzgadoletrascopiapo&second=1&type=Civil",
+            "creator_id": 398,
+            "created_at": "2026-03-11T17:32:19.000Z",
+            "updated_at": "2026-03-30T09:22:42.000Z",
+            "last_movement_official_date": null,
+            "confidential": false,
+            "court": {
+                "id": 59,
+                "name": "4° Juzgado de Letras de Copiapó",
+                "url": "http://www.pjud.cl/trib-primera-instancia",
+                "last_daily_scrap": "2026-03-30T16:13:49.000Z"
+            },
+            "client": {
+                "id": 589925,
+                "name": "FLORES ARAYA YENIFER GRACIELA",
+                "integration_code": null,
+                "integration_id": null
+            },
+            "full_url": "/ct/cases/proxy/Suscriptores?case_code=C-372-2026&court=4juzgadoletrascopiapo&pass=%2B5ShZOtw1ibKCRFdbN%2BWoQ%3D%3D&second=1&type=Civil&user=15610706-9",
+            "new_child_cases": 0
+        },
+        {
+            "id": 2560116,
+            "code": "C-2387-2025",
+            "code_name": "ROL",
+            "title": "Sin título",
+            "parent_id": null,
+            "active": true,
+            "case_state_summary": null,
+            "url": "/ct/cases/proxy/OjvPjud?searchdata%5Bcompetencia%5D=3&searchdata%5BconCorte%5D=46&searchdata%5BconEraCausa%5D=2025&searchdata%5BconRolCausa%5D=2387&searchdata%5BconTipoCausa%5D=C&searchdata%5BconTribunal%5D=179&title=-%2F-&type=civil",
+            "creator_id": 485,
+            "created_at": "2026-03-03T15:02:10.000Z",
+            "updated_at": "2026-03-30T16:25:22.000Z",
+            "last_movement_official_date": null,
+            "confidential": false,
+            "court": {
+                "id": 329,
+                "name": "1° Juzgado Civil de Talcahuano",
+                "url": "http://www.pjud.cl/trib-primera-instancia",
+                "last_daily_scrap": "2026-03-30T16:16:36.000Z"
+            },
+            "full_url": "/ct/cases/proxy/OjvPjud?searchdata%5Bcompetencia%5D=3&searchdata%5BconCorte%5D=46&searchdata%5BconEraCausa%5D=2025&searchdata%5BconRolCausa%5D=2387&searchdata%5BconTipoCausa%5D=C&searchdata%5BconTribunal%5D=179&title=-%2F-&type=civil",
+            "new_child_cases": 0
+        },
+        {
+            "id": 2558267,
+            "code": "C-2989-2026",
+            "code_name": null,
+            "title": "Sin título",
+            "parent_id": null,
+            "active": true,
+            "case_state_summary": null,
+            "url": "/ct/cases/proxy/Suscriptores?case_code=C-2989-2026&court=13juzgadocivilsantiago&second=1&type=Civil",
+            "creator_id": 1,
+            "created_at": "2026-02-27T21:14:41.000Z",
+            "updated_at": "2026-03-30T09:22:32.000Z",
+            "last_movement_official_date": null,
+            "confidential": false,
+            "court": {
+                "id": 172,
+                "name": "13° Juzgado Civil de Santiago",
+                "url": "http://www.pjud.cl/trib-primera-instancia",
+                "last_daily_scrap": "2026-03-30T16:15:03.000Z"
+            },
+            "client": {
+                "id": 548408,
+                "name": "TAPIA LOURIDO BRUNO ESTEBAN",
+                "integration_code": null,
+                "integration_id": null
+            },
+            "full_url": "/ct/cases/proxy/Suscriptores?case_code=C-2989-2026&court=13juzgadocivilsantiago&pass=Lu4hhZW3cutmasV70JIEig%3D%3D&second=1&type=Civil&user=14357873-9",
+            "new_child_cases": 0
+        },
+        {
+            "id": 2551624,
+            "code": "C-187-2024",
+            "code_name": "ROL",
+            "title": "Sin título",
+            "parent_id": null,
+            "active": true,
+            "case_state_summary": null,
+            "url": "/ct/cases/proxy/Suscriptores?case_code=C-187-2024&court=3juzgadoletrastalca&second=1&type=Civil",
+            "creator_id": 398,
+            "created_at": "2026-02-25T22:45:03.000Z",
+            "updated_at": "2026-03-30T09:22:26.000Z",
+            "last_movement_official_date": null,
+            "confidential": false,
+            "court": {
+                "id": 285,
+                "name": "3° Juzgado de Letras de Talca",
+                "url": "http://www.pjud.cl/trib-primera-instancia",
+                "last_daily_scrap": "2026-03-30T16:16:13.000Z"
+            },
+            "client": {
+                "id": 462742,
+                "name": "RIVERA QUINTEROS HECTOR ANTONIO",
+                "integration_code": null,
+                "integration_id": null
+            },
+            "full_url": "/ct/cases/proxy/Suscriptores?case_code=C-187-2024&court=3juzgadoletrastalca&pass=bHXdLxdD7C3oIw82xIw95A%3D%3D&second=1&type=Civil&user=17265654-4",
+            "new_child_cases": 0
+        },
+        {
+            "id": 2551541,
+            "code": "C-1901-2024",
+            "code_name": "ROL",
+            "title": "Sin título",
+            "parent_id": null,
+            "active": true,
+            "case_state_summary": null,
+            "url": "/ct/cases/proxy/Suscriptores?case_code=C-1901-2024&court=juzgadocivilvinadelmar&second=1&type=Civil",
+            "creator_id": 398,
+            "created_at": "2026-02-25T22:45:02.000Z",
+            "updated_at": "2026-03-30T09:22:26.000Z",
+            "last_movement_official_date": null,
+            "confidential": false,
+            "court": {
+                "id": 106,
+                "name": "1° Juzgado Civil de Viña del Mar",
+                "url": "http://www.pjud.cl/trib-primera-instancia",
+                "last_daily_scrap": "2026-03-30T16:14:56.000Z"
+            },
+            "client": {
+                "id": 492281,
+                "name": "GARCIA RAMOS CAMILA MARGARITA",
+                "integration_code": null,
+                "integration_id": null
+            },
+            "full_url": "/ct/cases/proxy/Suscriptores?case_code=C-1901-2024&court=juzgadocivilvinadelmar&pass=%2FvCoVlcCinrF14itA6S5sA%3D%3D&second=1&type=Civil&user=11948956-3",
+            "new_child_cases": 0
+        },
+        {
+            "id": 2551540,
+            "code": "C-1288-2024",
+            "code_name": "ROL",
+            "title": "Sin título",
+            "parent_id": null,
+            "active": true,
+            "case_state_summary": null,
+            "url": "/ct/cases/proxy/Suscriptores?case_code=C-1288-2024&court=juzgadoletrasvillaalemana&second=1&type=Civil",
+            "creator_id": 398,
+            "created_at": "2026-02-25T22:45:02.000Z",
+            "updated_at": "2026-03-30T09:22:27.000Z",
+            "last_movement_official_date": null,
+            "confidential": false,
+            "court": {
+                "id": 120,
+                "name": "Juzgado de Letras de Villa Alemana",
+                "url": "http://www.pjud.cl/trib-primera-instancia",
+                "last_daily_scrap": "2026-03-30T16:14:40.000Z"
+            },
+            "client": {
+                "id": 489549,
+                "name": "YANEZ CELEDON FRANCISCO JAVIER",
+                "integration_code": null,
+                "integration_id": null
+            },
+            "full_url": "/ct/cases/proxy/Suscriptores?case_code=C-1288-2024&court=juzgadoletrasvillaalemana&pass=%2FvCoVlcCinrF14itA6S5sA%3D%3D&second=1&type=Civil&user=11948956-3",
+            "new_child_cases": 0
+        }
+    ],
+    "pagination": {
+        "count": 272,
+        "per_page": 10,
+        "current_page": 1
+    }
+}

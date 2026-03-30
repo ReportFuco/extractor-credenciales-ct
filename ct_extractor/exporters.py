@@ -22,7 +22,7 @@ def flatten_record(record: dict[str, Any], parent_key: str = "") -> dict[str, An
 
 
 class IncrementalTableWriter:
-    def __init__(self, output_path: Path) -> None:
+    def __init__(self, output_path: Path, sheet_name: str = "data") -> None:
         self.output_path = output_path
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
         self.headers: list[str] | None = None
@@ -39,7 +39,7 @@ class IncrementalTableWriter:
         elif suffix == ".xlsx":
             self._mode = "xlsx"
             self._wb = Workbook(write_only=True)
-            self._ws = self._wb.create_sheet("credentials")
+            self._ws = self._wb.create_sheet(sheet_name)
             self._file = None
             self._csv_writer = None
         else:
@@ -103,4 +103,3 @@ class IncrementalTableWriter:
         else:
             assert self._wb is not None
             self._wb.save(self.output_path)
-
