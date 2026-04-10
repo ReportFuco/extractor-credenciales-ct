@@ -10,6 +10,7 @@ from typing import Any
 
 from ct_extractor.auth import AuthClient, AuthSession, TokenStore
 from ct_extractor.cases import UntitledCasesClient
+from ct_extractor.cases_export import CasesExportClient
 from ct_extractor.config import Settings
 from ct_extractor.credentials import CredentialsClient
 from ct_extractor.exporters import IncrementalTableWriter
@@ -91,6 +92,57 @@ def parse_args() -> argparse.Namespace:
         "--output",
         default="",
         help="Ruta de salida (.xlsx o .csv recomendado, .json opcional).",
+    )
+
+    cases_export_parser = subparsers.add_parser(
+        "cases-report", help="Descarga reporte XLSX de /ct/cases.xlsx."
+    )
+    cases_export_parser.add_argument(
+        "--force-new-token",
+        action="store_true",
+        help="Fuerza autenticacion antes de consultar.",
+    )
+    cases_export_parser.add_argument(
+        "--output",
+        default="",
+        help="Ruta de salida .xlsx (por defecto en carpeta output).",
+    )
+    cases_export_parser.add_argument(
+        "--mode",
+        choices=("filtered", "full-ct"),
+        default="filtered",
+        help="Preset de columnas/filtros para exportar.",
+    )
+    cases_export_parser.add_argument(
+        "--wait-seconds",
+        type=int,
+        default=0,
+        help="Espera maxima para /attachments/:id/download. 0 = solo obtener ID.",
+    )
+    cases_export_parser.add_argument(
+        "--poll-seconds",
+        type=int,
+        default=10,
+        help="Intervalo entre reintentos de descarga del attachment.",
+    )
+
+    cases_download_parser = subparsers.add_parser(
+        "cases-download", help="Descarga /attachments/:id/download usando un ID existente."
+    )
+    cases_download_parser.add_argument(
+        "--id",
+        required=True,
+        help="ID de export/attachment devuelto por /ct/cases.xlsx.",
+    )
+    cases_download_parser.add_argument(
+        "--force-new-token",
+        action="store_true",
+        help="Fuerza autenticacion antes de consultar.",
+    )
+    cases_download_parser.add_argument(
+        "--output",
+        default="",
+        help="Ruta de salida .xlsx (por defecto en carpeta output).",
     )
 
     return parser.parse_args()
@@ -507,6 +559,105 @@ def handle_untitled_cases(
     return 0
 
 
+def handle_cases_report(
+    settings: Settings,
+    force_new_token: bool,
+    output: str,
+    mode: str,
+    wait_seconds: int,
+    poll_seconds: int,
+) -> int:
+    output_path = resolve_output_path(output, prefix="cases_report")
+    if output_path.suffix.lower() != ".xlsx":
+        output_path = output_path.with_suffix(".xlsx")
+
+    session = get_or_create_session(settings, force_new=force_new_token)
+    client = CasesExportClient(settings)
+
+    def run_export(current_session: AuthSession) -> tuple[Path | None, str | None]:
+        return client.download(
+            token=current_session.auth_token,
+            email=current_session.email,
+            output_path=output_path,
+            export_mode=mode,
+            wait_timeout_seconds=wait_seconds,
+            poll_interval_seconds=poll_seconds,
+        )
+
+    try:
+        out_path, attachment_id = run_export(session)
+    except RuntimeError as err:
+        if force_new_token:
+            raise
+        session = get_or_create_session(settings, force_new=True)
+        out_path, attachment_id = run_export(session)
+        print(f"Token expirado/invalido, se regenero automaticamente ({err}).")
+
+    if attachment_id:
+        print(f"ID de export/attachment: {attachment_id}")
+        id_path = output_path.with_suffix(".id.txt")
+        id_path.parent.mkdir(parents=True, exist_ok=True)
+        id_path.write_text(f"{attachment_id}\n", encoding="utf-8")
+        print(f"ID guardado en: {id_path.resolve()}")
+    if out_path:
+        print("Reporte cases.xlsx descargado correctamente.")
+        print(f"Archivo generado: {out_path}")
+    else:
+        if wait_seconds > 0:
+            print(
+                "El archivo aun no esta disponible en /attachments/:id/download "
+                "dentro del tiempo de espera."
+            )
+        else:
+            print(
+                "Export solicitado. Usa el ID anterior para descargar luego en "
+                "/attachments/:id/download."
+            )
+    return 0
+
+
+def handle_cases_download(
+    settings: Settings,
+    attachment_id: str,
+    force_new_token: bool,
+    output: str,
+) -> int:
+    output_path = resolve_output_path(output, prefix=f"cases_report_{attachment_id}")
+    if output_path.suffix.lower() != ".xlsx":
+        output_path = output_path.with_suffix(".xlsx")
+
+    session = get_or_create_session(settings, force_new=force_new_token)
+    client = CasesExportClient(settings)
+
+    def run_download(current_session: AuthSession) -> Path | None:
+        return client.download_by_attachment_id(
+            token=current_session.auth_token,
+            email=current_session.email,
+            attachment_id=attachment_id,
+            output_path=output_path,
+        )
+
+    try:
+        out_path = run_download(session)
+    except RuntimeError as err:
+        if force_new_token:
+            raise
+        session = get_or_create_session(settings, force_new=True)
+        out_path = run_download(session)
+        print(f"Token expirado/invalido, se regenero automaticamente ({err}).")
+
+    if out_path:
+        print("Attachment descargado correctamente.")
+        print(f"Archivo generado: {out_path}")
+        return 0
+
+    print(
+        "El attachment aun no esta disponible (404/no listo). "
+        "Reintenta mas tarde con el mismo ID."
+    )
+    return 2
+
+
 def main() -> int:
     load_dotenv()
     args = parse_args()
@@ -545,6 +696,24 @@ def main() -> int:
             force_new_token=args.force_new_token,
             output=args.output,
             async_fetch=args.async_fetch,
+        )
+
+    if args.command == "cases-report":
+        return handle_cases_report(
+            settings=settings,
+            force_new_token=args.force_new_token,
+            output=args.output,
+            mode=args.mode,
+            wait_seconds=args.wait_seconds,
+            poll_seconds=args.poll_seconds,
+        )
+
+    if args.command == "cases-download":
+        return handle_cases_download(
+            settings=settings,
+            attachment_id=args.id,
+            force_new_token=args.force_new_token,
+            output=args.output,
         )
 
     raise ValueError(f"Comando no soportado: {args.command}")
