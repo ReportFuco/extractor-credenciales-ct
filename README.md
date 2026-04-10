@@ -21,6 +21,18 @@ Script modular en Python para:
 
 ## Uso
 
+Listar comandos Invoke:
+
+```bash
+invoke --list
+```
+
+Generar token:
+
+```bash
+invoke token
+```
+
 Generar token:
 
 ```bash
@@ -57,6 +69,18 @@ Reporte de causas sin titulo:
 python main.py untitled-cases --per-page 100 --async-fetch --output output/causas_sin_titulo.xlsx
 ```
 
+Reporte de casos (modo full-ct) devolviendo ID:
+
+```bash
+invoke cases-report --mode full-ct
+```
+
+Descargar attachment por ID cuando este listo:
+
+```bash
+invoke cases-download --attachment-id <ID>
+```
+
 ## CLI disponible
 
 | Comando | Descripcion | Ejemplo |
@@ -71,12 +95,22 @@ python main.py untitled-cases --per-page 100 --async-fetch --output output/causa
 | `python main.py credentials --output archivo.json` | Exporta JSON completo (`results` + `pagination`). | `python main.py credentials --all --output output/credenciales.json` |
 | `python main.py untitled-cases --per-page M` | Exporta causas sin titulo (todas las paginas). | `python main.py untitled-cases --per-page 100` |
 | `python main.py untitled-cases --async-fetch` | Exporta causas sin titulo con cliente async. | `python main.py untitled-cases --per-page 100 --async-fetch --output output/causas_sin_titulo.csv` |
+| `python main.py cases-report --mode full-ct` | Solicita export de casos y obtiene ID de attachment. | `python main.py cases-report --mode full-ct` |
+| `python main.py cases-download --id <ID>` | Descarga attachment por ID cuando este listo. | `python main.py cases-download --id 89bca0e5dcf7cecb63211256` |
 
 Parametros utiles de `credentials`:
 
 - `--sort-by` campo de orden (default `created_at`)
 - `--order` ordenamiento `asc` o `desc` (default `desc`)
 - `--force-new-token` regenera token antes de consultar
+
+## Comandos Invoke disponibles
+
+- `invoke token [--force]`
+- `invoke credentials [--page N] [--per-page M] [--all-pages] [--sort-by FIELD] [--order asc|desc] [--force-new-token] [--async-fetch] [--output PATH]`
+- `invoke untitled-cases [--per-page M] [--force-new-token] [--async-fetch] [--output PATH]`
+- `invoke cases-report [--mode filtered|full-ct] [--wait-seconds N] [--poll-seconds N] [--force-new-token] [--output PATH]`
+- `invoke cases-download --attachment-id ID [--force-new-token] [--output PATH]`
 
 ## Variables de entorno
 
